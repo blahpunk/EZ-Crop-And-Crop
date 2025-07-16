@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QSlider, QPushButton,
     QHBoxLayout, QVBoxLayout, QFileDialog, QLineEdit, QComboBox, QMessageBox, QSizePolicy
 )
-from PyQt5.QtCore import Qt, QRect, QTimer, QPoint, QSize
+from PyQt5.QtCore import Qt, QRect, QTimer, QPoint, QSize, QSettings
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen, QColor
 
 import cv2  # pip install opencv-python-headless
@@ -358,6 +358,9 @@ class VideoCropper(QMainWindow):
         self.playing = False
         self.crop_start = 0
         self.crop_end = None
+        self.settings = QSettings("EZCropCrop", "EZCropCropApp")
+        self.last_open_folder = self.settings.value("last_open_folder", os.path.expanduser("~"))
+        self.last_save_folder = self.settings.value("last_save_folder", os.path.expanduser("~"))
         self.init_ui()
 
     def init_ui(self):
@@ -445,11 +448,14 @@ class VideoCropper(QMainWindow):
     def load_video(self, path=None):
         if not path:
             file, _ = QFileDialog.getOpenFileName(
-                self, "Open Video", "", "Video Files (*.mp4 *.mov *.avi *.mkv *.webm)"
+                self, "Open Video", self.last_open_folder, "Video Files (*.mp4 *.mov *.avi *.mkv *.webm)"
             )
             if not file:
                 return
             path = file
+        self.last_open_folder = os.path.dirname(path)
+        self.settings.setValue("last_open_folder", self.last_open_folder)
+        self.settings.sync()
         self.video_path = path
         if self.video_cap:
             self.video_cap.release()
@@ -561,13 +567,13 @@ class VideoCropper(QMainWindow):
             QMessageBox.warning(self, "No video loaded", "Please load a video first.")
             return
 
-        # Use source file extension and provide a default name
         base, ext = os.path.splitext(os.path.basename(self.video_path))
         default_name = base + "-cropped" + ext
+        default_path = os.path.join(self.last_save_folder, default_name)
         out_path, _ = QFileDialog.getSaveFileName(
             self,
             "Export Cropped Video",
-            default_name,
+            default_path,
             "Video Files (*%s)" % ext
         )
         if not out_path:
@@ -575,6 +581,9 @@ class VideoCropper(QMainWindow):
         # Ensure extension is present
         if not out_path.lower().endswith(ext.lower()):
             out_path += ext
+        self.last_save_folder = os.path.dirname(out_path)
+        self.settings.setValue("last_save_folder", self.last_save_folder)
+        self.settings.sync()
 
         x, y, w, h = self.crop_overlay.get_crop()
         if w <= 0 or h <= 0:
