@@ -35,7 +35,7 @@
 ## 📥 Download & Installation
 
 1. **Download the latest version**:
-    - [ez_crop_and_crop.py](https://raw.githubusercontent.com/YOUR_USERNAME/EZ-Crop-And-Crop/main/ez_crop_and_crop.py)
+    - [ez_crop_and_crop.py](https://raw.githubusercontent.com/blahpunk/EZ-Crop-And-Crop/refs/heads/master/ez_crop_and_crop.py)
 
 2. **Install dependencies**:
     ```bash
